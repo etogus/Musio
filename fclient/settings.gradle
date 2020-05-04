@@ -1,0 +1,2 @@
+rootProject.name='fclient'
+include ':app'
