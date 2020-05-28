@@ -3,6 +3,7 @@ package com.rpo.backend.controllers;
 import com.rpo.backend.models.Artist;
 import com.rpo.backend.models.Country;
 import com.rpo.backend.repositories.CountryRepository;
+import com.rpo.backend.tools.DataValidationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +13,7 @@ import org.springframework.web.server.ResponseStatusException;
 import javax.validation.Valid;
 import java.util.*;
 
+@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/api/v1")
 public class CountryController {
@@ -24,22 +26,32 @@ public class CountryController {
         return countryRepository.findAll();
     }
 
+    // GET запрос, метод возвращает запись из таблицы countries c указанным индексом.
+    // Индекс указывается в URL.
+    @GetMapping("/countries/{id}")
+    public ResponseEntity<Country> getCountry(@PathVariable(value = "id") Long countryId)
+            throws DataValidationException
+    {
+        Country country = countryRepository.findById(countryId)
+                .orElseThrow(()-> new DataValidationException("Страна с таким индексом не найдена"));
+        return ResponseEntity.ok(country);
+    }
+
     // POST запрос, сохраняем в таблице countries новую страну
     @PostMapping("/countries")
-    public ResponseEntity<Object> createCountry(@Valid @RequestBody Country country) {
-        // чтобы не было повторящихся названий стран
+    public ResponseEntity<Object> createCountry(@Valid @RequestBody Country country)
+            throws DataValidationException {
         try {
             Country nc = countryRepository.save(country);
             return new ResponseEntity<Object>(nc, HttpStatus.OK);
-        } catch (Exception ex) {
+        }
+        catch(Exception ex)
+        {
             String error;
-            if(ex.getMessage().contains("countries.name_UNIQUE"))
-                error = "country_already_exists";
+            if (ex.getMessage().contains("countries.name_UNIQUE"))
+                throw new DataValidationException("Эта страна уже есть в базе");
             else
-                error = "undefined_error";
-            Map<String, String> map = new HashMap<>();
-            map.put("error", error);
-            return new ResponseEntity<Object>(map, HttpStatus.OK);
+                throw new DataValidationException("Неизвестная ошибка");
         }
     }
 
@@ -48,35 +60,30 @@ public class CountryController {
     // если страна с указанным ключом отсутствует
     @PutMapping("/countries/{id}")
     public ResponseEntity<Country> updateCountry(@PathVariable(value = "id") Long countryId,
-                                                 @Valid @RequestBody Country countryDetails) {
-        Country country = null;
-        Optional<Country> optionalCountry = countryRepository.findById(countryId);
-        if(optionalCountry.isPresent()) {
-            country = optionalCountry.get();
+                                                 @Valid @RequestBody Country countryDetails)
+            throws DataValidationException
+    {
+        try {
+            Country country = countryRepository.findById(countryId)
+                    .orElseThrow(() -> new DataValidationException("Страна с таким индексом не найдена"));
             country.name = countryDetails.name;
             countryRepository.save(country);
+            return ResponseEntity.ok(country);
         }
-        else {
-            throw new ResponseStatusException(
-                    HttpStatus.NOT_FOUND, "country_not_found"
-            );
+        catch (Exception ex) {
+            String error;
+            if (ex.getMessage().contains("countries.name_UNIQUE"))
+                throw new DataValidationException("Эта страна уже есть в базе");
+            else
+                throw new DataValidationException("Неизвестная ошибка");
         }
-        return ResponseEntity.ok(country);
     }
 
-    // DELETE запрос, метод удаления записи из таблицы countries
-    @DeleteMapping("/countries/{id}")
-    public Map<String, Boolean> deleteCountry(@PathVariable(value = "id") Long countryId) {
-        Optional<Country> country = countryRepository.findById(countryId);
-        Map<String, Boolean> response = new HashMap<>();
-        if(country.isPresent()) {
-            countryRepository.delete(country.get());
-            response.put("deleted", Boolean.TRUE);
-        }
-        else {
-            response.put("deleted", Boolean.FALSE);
-        }
-        return response;
+    // POST запрос, метод удаления списка стран из таблицы countries
+    @PostMapping("/deletecountries")
+    public ResponseEntity deleteCountries(@Valid @RequestBody List<Country> countries) {
+        countryRepository.deleteAll(countries);
+        return new ResponseEntity(HttpStatus.OK);
     }
 
     // GET запрос для вывода списка артистов для страны

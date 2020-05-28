@@ -1,5 +1,5 @@
 .App {
-  text-align: center;
+  text-align: left;
 }
 
 .App-logo {
@@ -35,4 +35,31 @@
   to {
     transform: rotate(360deg);
   }
+}
+/*
+Класс wrapper нужен для того, чтобы правильно расположить sidebar и основную страницу на экране.
+ */
+.wrapper {
+  display: flex;
+  align-items: stretch;
+}
+/*
+my-sidebar сделан в двух исполнениях: expanded и collapsed. Это позволит свертывать sidebar, оставляя
+только узкую полоску меню, с иконками по левой границе экрана.
+Атрибут min-height задан так, чтобы sidebar занимал по вертикали весь экран.
+ */
+.my-sidebar {
+  min-height: 100vh;
+  background: #ECF0F1;
+  color: #ECF0F1;
+}
+
+.my-sidebar-expanded {
+  min-width: 200px;
+  max-width: 200px;
+}
+
+.my-sidebar-collapsed {
+  min-width: 62px;
+  max-width: 62px;
 }
