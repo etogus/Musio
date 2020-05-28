@@ -12,7 +12,7 @@ Musio - приложение, с помощью которого можно до
 
 Package fclient - Android-клиент приложения.
 
-Package backend содержит src с бэкэндом на Spring boot и package front с форнтендом на React.js.
+Package backend содержит src с бэкэндом на Spring boot и package front с фронтендом на React.js.
 
 1. IDE:
 - Android Studio
