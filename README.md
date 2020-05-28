@@ -19,7 +19,6 @@ Package backend содержит src с бэкэндом на Spring boot и pac
 - Intellij IDEA
 2. API:
 - Spring boot
-Spring Framework реализует модель данных Model - View - Controller для управления данными и связью с БД.
 3. Языки программирования:
 - Java
 - С++
@@ -27,4 +26,3 @@ Spring Framework реализует модель данных Model - View - Con
 - MySQL
 5. Пользовательский интерфейс:
 - React.js
-JavaScript-библиотека React.js используется для frontend части приложения.
