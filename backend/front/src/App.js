@@ -10,6 +10,11 @@ import Utils from "./utils/Utils"
 import {connect} from "react-redux";
 import CountryListComponent from "./components/CountryListComponent";
 import CountryComponent from "./components/CountryComponent";
+import ArtistListComponent from "./components/ArtistListComponent";
+import SongListComponent from "./components/SongListComponent";
+import ShopListComponent from "./components/ShopListComponent";
+import UserListComponent from "./components/UserListComponent";
+import MyAccountComponent from "./components/MyAccountComponent";
 
 const AuthRoute = props => {
     let user = Utils.getUser();
@@ -42,6 +47,11 @@ function App(props) {
                             {/*Атрибут exact нужен для того, чтобы маршрутизатор не путал этот путь с /countries/:id*/}
                             <AuthRoute path="/countries" exact component={CountryListComponent}/>
                             <AuthRoute path="/countries/:id" component={CountryComponent}/>
+                            <AuthRoute path="/artists" exact component={ArtistListComponent}/>
+                            <AuthRoute path="/songs" exact component={SongListComponent}/>
+                            <AuthRoute path="/shops" exact component={ShopListComponent}/>
+                            <AuthRoute path="/users" exact component={UserListComponent}/>
+                            <AuthRoute path="/myaccount" exact component={MyAccountComponent}/>
                             <Route path="/login" component={Login} />
                         </Switch>
                     </div>

@@ -5,6 +5,9 @@ import com.rpo.backend.models.Country;
 import com.rpo.backend.repositories.CountryRepository;
 import com.rpo.backend.tools.DataValidationException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,9 +24,11 @@ public class CountryController {
     CountryRepository countryRepository;
 
     // GET запрос, метод возвращает список стран, который будет автоматически преобразован в JSON
+    // Для постраничного вывода - номер текущей страницы и количество строк
+    // на странице передадим в параметрах запроса (?page=1&limit=100)
     @GetMapping("/countries")
-    public List<Country> getAllCountries() {
-        return countryRepository.findAll();
+    public Page<Country> getAllCountries(@RequestParam("page") int page, @RequestParam("limit") int limit) {
+        return countryRepository.findAll(PageRequest.of(page, limit, Sort.by(Sort.Direction.ASC, "name")));
     }
 
     // GET запрос, метод возвращает запись из таблицы countries c указанным индексом.
@@ -55,6 +60,16 @@ public class CountryController {
         }
     }
 
+    // GET запрос для вывода списка артистов для страны
+    @GetMapping("/countries/{id}/artists")
+    public ResponseEntity<List<Artist>> getCountryArtists(@PathVariable(value = "id") Long countryId) {
+        Optional<Country> cc = countryRepository.findById(countryId);
+        if(cc.isPresent()) {
+            return ResponseEntity.ok(cc.get().artists);
+        }
+        return ResponseEntity.ok(new ArrayList<Artist>());
+    }
+
     // PUT запрос, обновляет запись в таблице country
     // Здесь обработка ошибки сводится к тому, что мы возвращаем код 404 на запрос в случае,
     // если страна с указанным ключом отсутствует
@@ -79,20 +94,10 @@ public class CountryController {
         }
     }
 
-    // POST запрос, метод удаления списка стран из таблицы countries
+    // Метод удаления списка стран из таблицы countries
     @PostMapping("/deletecountries")
     public ResponseEntity deleteCountries(@Valid @RequestBody List<Country> countries) {
         countryRepository.deleteAll(countries);
         return new ResponseEntity(HttpStatus.OK);
-    }
-
-    // GET запрос для вывода списка артистов для страны
-    @GetMapping("/countries/{id}/artists")
-    public ResponseEntity<List<Artist>> getCountryArtists(@PathVariable(value = "id") Long countryId) {
-        Optional<Country> cc = countryRepository.findById(countryId);
-        if(cc.isPresent()) {
-            return ResponseEntity.ok(cc.get().artists);
-        }
-        return ResponseEntity.ok(new ArrayList<Artist>());
     }
 }

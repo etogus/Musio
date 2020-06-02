@@ -49,7 +49,7 @@ class NavigationBar extends React.Component {
                         onClick={this.props.toggleSideBar}>
                     <FontAwesomeIcon icon={ faBars}/>
                 </button>
-                <Navbar.Brand>myRPO</Navbar.Brand>
+                <Navbar.Brand>Musio</Navbar.Brand>
                 <Navbar.Toggle aria-controls="basic-navbar-nav" />
                 <Navbar.Collapse id="basic-navbar-nav">
                     <Nav className="mr-auto">

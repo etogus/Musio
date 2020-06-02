@@ -3,7 +3,11 @@ package com.rpo.backend.controllers;
 import com.rpo.backend.models.Song;
 import com.rpo.backend.repositories.CountryRepository;
 import com.rpo.backend.repositories.SongRepository;
+import com.rpo.backend.tools.DataValidationException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,8 +30,17 @@ public class SongController {
     CountryRepository countryRepository;
 
     @GetMapping("/songs")
-    public List<Song> getAllSongs() {
-        return songRepository.findAll();
+    public Page<Song> getAllSongs(@RequestParam("page") int page, @RequestParam("limit") int limit) {
+        return songRepository.findAll(PageRequest.of(page, limit, Sort.by(Sort.Direction.ASC, "name")));
+    }
+
+    @GetMapping("/songs/{id}")
+    public ResponseEntity<Song> getPainting(@PathVariable(value = "id") Long songId)
+            throws DataValidationException
+    {
+        Song painting = songRepository.findById(songId)
+                .orElseThrow(()-> new DataValidationException("Песня с таким индексом не найдена"));
+        return ResponseEntity.ok(painting);
     }
 
     @PostMapping("/songs")
@@ -57,19 +70,9 @@ public class SongController {
         return ResponseEntity.ok(song);
     }
 
-    @DeleteMapping("/songs/{id}")
-    public Map<String, Boolean> deleteSong(@PathVariable(value = "id") Long songId) {
-        Optional<Song> song = songRepository.findById(songId);
-        Map<String, Boolean> response = new HashMap<>();
-        if (song.isPresent())
-        {
-            songRepository.delete(song.get());
-            response.put("deleted", Boolean.TRUE);
-        }
-        else
-        {
-            response.put("deleted", Boolean.FALSE);
-        }
-        return response;
+    @PostMapping("/deletesongs")
+    public ResponseEntity deleteArtists(@Valid @RequestBody List<Song> songs) {
+        songRepository.deleteAll(songs);
+        return new ResponseEntity(HttpStatus.OK);
     }
 }

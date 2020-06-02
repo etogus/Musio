@@ -47,6 +47,10 @@ public class User {     //вместо того, чтобы для каждог�
     @Column(name = "salt")
     public String salt;
 
+    // Не будет связано с полем таблицы базы данных
+    @Transient
+    public String np;
+
     @Column(name = "token")
     public String token;
 

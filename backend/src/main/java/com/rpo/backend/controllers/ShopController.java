@@ -3,7 +3,11 @@ package com.rpo.backend.controllers;
 import com.rpo.backend.models.Shop;
 import com.rpo.backend.repositories.CountryRepository;
 import com.rpo.backend.repositories.ShopRepository;
+import com.rpo.backend.tools.DataValidationException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,8 +31,17 @@ public class ShopController {
 
     // GET запрос, метод возвращает список магазинов, который будет автоматически преобразован в JSON
     @GetMapping("/shops")
-    public List<Shop> getAllShops() {
-        return shopRepository.findAll();
+    public Page<Shop> getAllShops(@RequestParam("page") int page, @RequestParam("limit") int limit) {
+        return shopRepository.findAll(PageRequest.of(page, limit, Sort.by(Sort.Direction.ASC, "name")));
+    }
+
+    @GetMapping("/shops/{id}")
+    public ResponseEntity<Shop> getShop(@PathVariable(value = "id") Long shopId)
+            throws DataValidationException
+    {
+        Shop shop = shopRepository.findById(shopId)
+                .orElseThrow(()-> new DataValidationException("Магазин с таким индеком не найден"));
+        return ResponseEntity.ok(shop);
     }
 
     // POST запрос, сохраняем в таблице shops новый магазин
@@ -63,21 +76,10 @@ public class ShopController {
     }
 
     // DELETE запрос, метод удаления записи из таблицы shops
-    @DeleteMapping("/shops/{id}")
-    public Map<String, Boolean> deleteShop(@PathVariable(value = "id") Long shopId) {
-        Optional<Shop> shop = shopRepository.findById(shopId);
-        Map<String, Boolean> response = new HashMap<>();
-        if (shop.isPresent())
-        {
-            shopRepository.delete(shop.get());
-            response.put("deleted", Boolean.TRUE);
-        }
-        else
-        {
-            response.put("deleted", Boolean.FALSE);
-        }
-        return response;
+    @PostMapping("/deleteshops")
+    public ResponseEntity deleteShops(@Valid @RequestBody List<Shop> shops) {
+        shopRepository.deleteAll(shops);
+        return new ResponseEntity(HttpStatus.OK);
     }
-
 }
 

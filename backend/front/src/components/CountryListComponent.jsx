@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTrash, faEdit, faPlus } from '@fortawesome/fontawesome-free-solid'
 import BackendService from "../services/BackendService";
 import Alert from "./Alert";
+import PaginationComponent from "./PaginationComponent";
 
 class CountryListComponent extends Component {
     constructor(props) {
@@ -18,6 +19,9 @@ class CountryListComponent extends Component {
             // стран: true – отмечен, false – не отмечен.
             checkedItems: [],
             hidden: false, //логический флаг для запрета отображения списка стран, если запрос к сервису завершился с ошибкой
+            page: 1,
+            limit: 2,
+            totalCount: 0 //  общее количество стран, которое вернет REST сервис вместе с содержимым страницы
         };
 
         this.refreshCountries = this.refreshCountries.bind(this);
@@ -29,6 +33,12 @@ class CountryListComponent extends Component {
         this.handleGroupCheckChange = this.handleGroupCheckChange.bind(this);
         this.setChecked = this.setChecked.bind(this);
         this.deleteCountriesClicked = this.deleteCountriesClicked.bind(this);
+
+        this.onPageChanged = this.onPageChanged.bind(this);
+    }
+
+    onPageChanged(cp) {
+        this.refreshCountries(cp - 1)
     }
 
     // Ставит или снимает отметку всех чек боксов.
@@ -108,21 +118,24 @@ class CountryListComponent extends Component {
     // Функция обновления списка стран считывает его с помощью запроса к REST сервису и
     // помещает в поле состояния countries. В случае ошибки, устанавливает флаг hidden,
     // который используется в методе render для того, чтобы убрать с экрана изображение таблицы.
-    refreshCountries() {
-        BackendService.retrieveAllCountries()
+    // В параметрах функции передается номер текущей страницы, считая от нуля.
+    refreshCountries(cp) {
+        console.log("cp2", this.state.page);
+        BackendService.retrieveAllCountries(cp, this.state.limit)
             .then(
                 resp => {
-                    this.setState( { countries: resp.data, hidden: false });
+                    this.setState( { countries: resp.data.content,
+                        totalCount: resp.data.totalElements, page: cp, hidden: false });
                 }
             )
-            .catch(()=> { this.setState({ hidden: true })})
+            .catch(()=> { this.setState({ totalCount: 0, hidden: true })})
             .finally(()=> this.setChecked(false))
     }
 
     // Метод вызывается при загрузке страницы.
     // Здесь загружаются данные, необходимые для ее прорисовки.
     componentDidMount() {
-        this.refreshCountries()
+        this.refreshCountries(0)
     }
 
     // Обработчик кнопки для перехода к странице редактирования страны.
@@ -150,6 +163,11 @@ class CountryListComponent extends Component {
                             onClick={this.deleteCountriesClicked}><FontAwesomeIcon icon={faTrash}/>{' '}Удалить</button>
                 </div>
                 <div className="row my-2 mr-0">
+                    <PaginationComponent
+                        totalRecords={this.state.totalCount}
+                        pageLimit={this.state.limit}
+                        pageNeighbours={1}
+                        onPageChanged={this.onPageChanged} />
                     <table className="table table-sm">
                         <thead className="thead-light">
                         <tr>
