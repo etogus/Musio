@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 // Ответ серверу 3000 явно разрешаем в настройках нашего сервера 8081.
 @CrossOrigin(origins = "http://localhost:3000")
@@ -55,6 +56,25 @@ public class LoginController {
         return new ResponseEntity<Object>(HttpStatus.UNAUTHORIZED);
     }
 
+    @PostMapping("/register")
+    public ResponseEntity<Object> register(@Valid @RequestBody Map<String, String> credentials) {
+        String login = credentials.get("login");
+        String pwd = credentials.get("password");
+        if (!pwd.isEmpty() && !login.isEmpty()) {
+            User u2 = new User();
+            u2.salt = String.valueOf(ThreadLocalRandom.current().nextInt(10000000, 99999999 + 1));
+            String salt = u2.salt;
+            String hash2 = Utils.ComputeHash(pwd, salt);
+            String token = UUID.randomUUID().toString();
+            u2.login = login;
+            u2.token = token;
+            u2.password = hash2;
+            User u3 = userRepository.saveAndFlush(u2);
+            return new ResponseEntity<Object>(u3, HttpStatus.OK);
+        }
+        return new ResponseEntity<Object>(HttpStatus.UNAUTHORIZED);
+    }
+
     @GetMapping("/logout")
     public ResponseEntity logout(@RequestHeader(value = "Authorization", required = false) String token) {
         if (token != null && !token.isEmpty()) {
@@ -69,6 +89,4 @@ public class LoginController {
         }
         return new ResponseEntity(HttpStatus.UNAUTHORIZED);
     }
-
-
 }
